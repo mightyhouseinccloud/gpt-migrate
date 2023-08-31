@@ -81,13 +81,13 @@ def main(
 
 
     ''' 1. Setup '''
-    if step in ['setup', 'all']:
+    if step in {'setup', 'all'}:
 
         # Set up environment (Docker)
         create_environment(globals)
 
     ''' 2. Migration '''
-    if step in ['migrate', 'all']:
+    if step in {'migrate', 'all'}:
         target_deps_per_file = defaultdict(list) 
         def migrate(sourcefile, globals, parent_file=None):
             # recursively work through each of the files in the source directory, starting with the entrypoint.
@@ -101,7 +101,7 @@ def main(
         add_env_files(globals)
 
     ''' 3. Testing '''
-    if step in ['test', 'all']:
+    if step in {'test', 'all'}:
         while True:
             result = run_dockerfile(globals)
             if result=="success": break
@@ -120,7 +120,7 @@ def main(
                 debug_error(result,globals.testfiles,globals)
                 run_dockerfile(globals)
                 time.sleep(1) # wait for docker to spin up
-    
+
     typer.echo(typer.style("All tests complete. Ready to rumble. 💪", fg=typer.colors.GREEN))
 
 if __name__ == "__main__":

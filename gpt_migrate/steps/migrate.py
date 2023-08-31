@@ -5,25 +5,25 @@ import os
 import json
 import typer
 
-def get_function_signatures(targetfiles: List[str], globals): 
+def get_function_signatures(targetfiles: List[str], globals):
     '''  Get the function signatures and a one-sentence summary for each function '''    
     all_sigs = []
 
     for targetfile in targetfiles:
-        sigs_file_name = targetfile + "_sigs.json"
+        sigs_file_name = f"{targetfile}_sigs.json"
 
         if file_exists_in_memory(sigs_file_name):
             with open(os.path.join("memory", sigs_file_name), 'r') as f:
                 sigs = json.load(f)
             all_sigs.extend(sigs)
-        
+
         else:
             function_signatures_template = prompt_constructor(HIERARCHY, GUIDELINES, GET_FUNCTION_SIGNATURES)
 
             targetfile_content = ""
             with open(os.path.join(globals.targetdir, targetfile), 'r') as file:
                 targetfile_content = file.read()
-            
+
             prompt = function_signatures_template.format(targetlang=globals.targetlang,
                                                 sourcelang=globals.sourcelang, 
                                                 targetfile_content=targetfile_content)
@@ -32,7 +32,7 @@ def get_function_signatures(targetfiles: List[str], globals):
                                     waiting_message=f"Parsing function signatures for {targetfile}...",
                                     success_message=None,
                                     globals=globals))
-            
+
             all_sigs.extend(sigs)
 
             with open(os.path.join('memory', sigs_file_name), 'w') as f:
@@ -124,7 +124,7 @@ def add_env_files(globals):
     dockerfile_content = ""
     with open(os.path.join(globals.targetdir, 'Dockerfile'), 'r') as file:
         dockerfile_content = file.read()
-    
+
     external_deps = read_from_memory("external_dependencies")
 
     prompt = add_docker_requirements_template.format(dockerfile_content=dockerfile_content,
@@ -133,14 +133,16 @@ def add_env_files(globals):
                                                         targetlang=globals.targetlang,
                                                         guidelines=globals.guidelines)
 
-    external_deps_name, _, external_deps_content = llm_write_file(prompt,
-                    target_path=None,
-                    waiting_message=f"Creating dependencies file required for the Docker environment...",
-                    success_message=None,
-                    globals=globals)
-    
+    external_deps_name, _, external_deps_content = llm_write_file(
+        prompt,
+        target_path=None,
+        waiting_message="Creating dependencies file required for the Docker environment...",
+        success_message=None,
+        globals=globals,
+    )
+
     ''' Refine Dockerfile '''
-    
+
     refine_dockerfile_template = prompt_constructor(HIERARCHY, GUIDELINES, WRITE_CODE, REFINE_DOCKERFILE, SINGLEFILE)
     prompt = refine_dockerfile_template.format(dockerfile_content=dockerfile_content,
                                                 target_directory_structure=build_directory_structure(globals.targetdir),
@@ -148,8 +150,10 @@ def add_env_files(globals):
                                                 external_deps_content=external_deps_content,
                                                 guidelines=globals.guidelines)
 
-    llm_write_file(prompt,
-                    target_path="Dockerfile",
-                    waiting_message=f"Refining Dockerfile based on dependencies required for the Docker environment...",
-                    success_message="Refined Dockerfile with dependencies required for the Docker environment.",
-                    globals=globals)
+    llm_write_file(
+        prompt,
+        target_path="Dockerfile",
+        waiting_message="Refining Dockerfile based on dependencies required for the Docker environment...",
+        success_message="Refined Dockerfile with dependencies required for the Docker environment.",
+        globals=globals,
+    )

@@ -23,15 +23,13 @@ def run_dockerfile(globals):
         error_text = typer.style("Something isn't right with Docker. Please ensure Docker is running and take a look over the Dockerfile; there may be errors. Once these are resolved, you can resume your progress with the `--step test` flag.", fg=typer.colors.RED)
         typer.echo(error_text)
 
-        # have typer ask if the user would like to use AI to fix it? If so, call function fix(). if not, raise typer.Exit()
         if typer.confirm("Would you like GPT-Migrate to try to fix this?"):
             return error_message
-        else:
-            dockerfile_content = ""
-            with open(os.path.join(globals.targetdir, 'Dockerfile'), 'r') as file:
-                dockerfile_content = file.read()
-            require_human_intervention(error_message,relevant_files=construct_relevant_files([("Dockerfile", dockerfile_content)]),globals=globals)
-            raise typer.Exit()
+        dockerfile_content = ""
+        with open(os.path.join(globals.targetdir, 'Dockerfile'), 'r') as file:
+            dockerfile_content = file.read()
+        require_human_intervention(error_message,relevant_files=construct_relevant_files([("Dockerfile", dockerfile_content)]),globals=globals)
+        raise typer.Exit()
         
 def create_tests(testfile,globals):
 
@@ -66,7 +64,12 @@ def validate_tests(testfile,globals):
             spinner.ok("✅ ")
         print(result.stdout)
         find_and_replace_file(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), str(globals.sourceport), str(globals.targetport))
-        typer.echo(typer.style(f"Tests validated successfully on your source app.", fg=typer.colors.GREEN))
+        typer.echo(
+            typer.style(
+                "Tests validated successfully on your source app.",
+                fg=typer.colors.GREEN,
+            )
+        )
         return "success"
     except subprocess.CalledProcessError as e:
         find_and_replace_file(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), str(globals.sourceport), str(globals.targetport))
@@ -77,12 +80,11 @@ def validate_tests(testfile,globals):
 
         if typer.confirm("Would you like GPT-Migrate to try to fix this?"):
             return error_message
-        else:
-            tests_content = ""
-            with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), 'r') as file:
-                tests_content = file.read()
-            require_human_intervention(error_message,relevant_files=construct_relevant_files([(f"gpt_migrate/{testfile}", tests_content)]),globals=globals)
-            raise typer.Exit()
+        tests_content = ""
+        with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), 'r') as file:
+            tests_content = file.read()
+        require_human_intervention(error_message,relevant_files=construct_relevant_files([(f"gpt_migrate/{testfile}", tests_content)]),globals=globals)
+        raise typer.Exit()
     except subprocess.TimeoutExpired as e:
         print(f"gpt_migrate/{testfile} timed out due to an unknown error and requires debugging.")
         return f"gpt_migrate/{testfile} timed out due to an unknown error and requires debugging."
@@ -106,12 +108,11 @@ def run_test(testfile,globals):
 
         if typer.confirm("Would you like GPT-Migrate to try to fix this?"):
             return error_message
-        else:
-            tests_content = ""
-            with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), 'r') as file:
-                tests_content = file.read()
-            require_human_intervention(error_message,relevant_files=construct_relevant_files([(f"gpt_migrate/{testfile}", tests_content)]),globals=globals)
-            raise typer.Exit()
+        tests_content = ""
+        with open(os.path.join(globals.targetdir, f"gpt_migrate/{testfile}"), 'r') as file:
+            tests_content = file.read()
+        require_human_intervention(error_message,relevant_files=construct_relevant_files([(f"gpt_migrate/{testfile}", tests_content)]),globals=globals)
+        raise typer.Exit()
 
     except subprocess.TimeoutExpired as e:
         print(f"gpt_migrate/{testfile} timed out due to an unknown error and requires debugging.")
